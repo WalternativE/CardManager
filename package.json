@@ -1,4 +1,9 @@
 {
+  "name": "card-manager",
+  "author": {
+    "name": "WalternativE",
+    "email": "gregor.beyerle@gmail.com"
+  },
   "private": true,
   "scripts": {
     "start": "webpack-dev-server"
