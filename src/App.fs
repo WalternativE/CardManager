@@ -5,6 +5,8 @@ open Elmish.React
 open Fable.Helpers.React
 open Fable.Helpers.React.Props
 
+module Browser = Fable.Import.Browser
+
 // MODEL
 
 type Draft =
@@ -20,9 +22,9 @@ type Msg =
 | UpdateDraftForm of string
 | CreateDraft
 | BumpDraft of string
-| UnbumpDraft of string
 | RejectDraft of string
 | DeleteDraft of string
+(* _3_a_ define the UnbumpDraft message here. *)
 
 let init() : Model =
     { DraftForm = ""
@@ -33,9 +35,17 @@ let init() : Model =
 let bump (title : string) (d : Draft) =
     match d with
     | NewDraft t ->
-        if t = title then (BumpedDraft (t, 1)) else d
+        if t = title then
+            sprintf "Draft %s has its first bump!" t
+            |> Browser.console.log
+            (BumpedDraft (t, 1))
+        else d
     | BumpedDraft (t, b) ->
-        if t = title then (BumpedDraft (t, b + 1)) else d
+        if t = title then
+            sprintf "Draft %s has now %d bumps!" t b
+            |> Browser.console.log
+            (BumpedDraft (t, b + 1))
+        else d
     | RejectedDraft _ -> d
 
 let unbump (title : string) (d : Draft) =
@@ -70,11 +80,6 @@ let update (msg:Msg) (model:Model) =
             model.Drafts
             |> List.map (bump title)
         { model with Drafts = drafts }
-    | UnbumpDraft title ->
-        let drafts =
-            model.Drafts
-            |> List.map (unbump title)
-        { model with Drafts = drafts }
     | RejectDraft title ->
         let drafts = 
             model.Drafts
@@ -89,47 +94,52 @@ let update (msg:Msg) (model:Model) =
                     | RejectedDraft t -> t = title |> not
                     | _ -> true)
         { model with Drafts = drafts }
+    (* _3_b_ Handle the UnbumpDraft message here - use the unbump method *)
 
 // VIEW (rendered with React)
 
 open Fulma
 
+let newDraftTile dispatch (title : string) =
+    Tile.tile [ Tile.IsChild; Tile.Size Tile.Is4; Tile.CustomClass "content-card" ]
+        [ Card.card [ ]
+            [ Card.header []
+                [ Card.Header.title [] [ str title ] ]
+              Card.content []
+                [ Content.content [] [ str "Your prestine card draft." ] ]
+              Card.footer []
+                [ Card.Footer.a [ GenericOption.Props [ OnClick (fun _ -> BumpDraft title |> dispatch) ] ]
+                    [ str "Bump" ]
+                  Card.Footer.a [ (* _1_ insert the handler here *)  ]
+                    [ str "Reject" ] ] ] ]
+
+let rejectedDraftTile dispatch (title : string) =
+    Tile.tile [ Tile.IsChild; Tile.Size Tile.Is4; Tile.CustomClass "content-card" ]
+        [ Card.card [ ]
+            [ Card.header []
+                [ Card.Header.title [] [ str title ] ]
+              Card.content []
+                [ Content.content [] [ str "Unfortunately this draft has been rejected 🙁" ] ]
+              Card.footer []
+                [ Card.Footer.a [ GenericOption.Props [ OnClick (fun _ -> DeleteDraft title |> dispatch) ] ]
+                    [ str "Delete" ] ] ] ]
+
+let bumpedDraftTile dispatch (title : string) (bumps : int) =
+    (*
+        _2_ This function just reuses the tile we create for new drafts.
+        Can you create a similar tile that shows you how many bumps the draft
+        received in its content? Also: give it a link to bump it even more in the footer!
+    *)
+    newDraftTile dispatch title
+
 let toCard dispatch (draft : Draft) =
     match draft with
     | NewDraft title ->
-        Tile.tile [ Tile.IsChild; Tile.Size Tile.Is4; Tile.CustomClass "content-card" ]
-            [ Card.card [ ]
-                [ Card.header []
-                    [ Card.Header.title [] [ str title ] ]
-                  Card.content []
-                    [ Content.content [] [ str "Your prestine card draft." ] ]
-                  Card.footer []
-                    [ Card.Footer.a [ GenericOption.Props [ OnClick (fun _ -> BumpDraft title |> dispatch) ] ]
-                        [ str "Bump" ]
-                      Card.Footer.a [ GenericOption.Props [ OnClick (fun _ -> RejectDraft title |> dispatch) ] ]
-                        [ str "Reject" ] ] ] ]
+        newDraftTile dispatch title
     | BumpedDraft (title, bumps) ->
-        Tile.tile [ Tile.IsChild; Tile.Size Tile.Is4; Tile.CustomClass "content-card" ]
-            [ Card.card [ ]
-                [ Card.header []
-                    [ Card.Header.title [] [ str title ] ]
-                  Card.content []
-                    [ Content.content [] [ sprintf "This card has %d bumps!" bumps |> str ] ]
-                  Card.footer []
-                    [ Card.Footer.a [ GenericOption.Props [ OnClick (fun _ -> BumpDraft title |> dispatch) ] ]
-                        [ str "Bump" ]
-                      Card.Footer.a [ GenericOption.Props [ OnClick (fun _ -> UnbumpDraft title |> dispatch) ] ]
-                        [ str "Unbump" ] ] ] ]
+        bumpedDraftTile dispatch title bumps
     | RejectedDraft title ->
-        Tile.tile [ Tile.IsChild; Tile.Size Tile.Is4; Tile.CustomClass "content-card" ]
-            [ Card.card [ ]
-                [ Card.header []
-                    [ Card.Header.title [] [ str title ] ]
-                  Card.content []
-                    [ Content.content [] [ str "Unfortunately this draft has been rejected 🙁" ] ]
-                  Card.footer []
-                    [ Card.Footer.a [ GenericOption.Props [ OnClick (fun _ -> DeleteDraft title |> dispatch) ] ]
-                        [ str "Delete" ] ] ] ]
+        rejectedDraftTile dispatch title
 
 let toCardRow row =
     Tile.tile [ Tile.IsParent; Tile.Size Tile.Is12 ] row
@@ -184,7 +194,7 @@ open Elmish.HMR
 Program.mkSimple init update view
 |> Program.withReactUnoptimized "elmish-app"
 #if DEBUG
-|> Program.withConsoleTrace
+// |> Program.withConsoleTrace
 |> Program.withDebugger
 #endif
 |> Program.run
