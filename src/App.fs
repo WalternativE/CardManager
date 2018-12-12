@@ -23,7 +23,6 @@ type Msg =
 | CreateDraft
 | BumpDraft of string
 | RejectDraft of string
-| DeleteDraft of string
 (* _3_a_ define the UnbumpDraft message here. *)
 
 let init() : Model =
@@ -85,15 +84,6 @@ let update (msg:Msg) (model:Model) =
             model.Drafts
             |> List.map (reject title)
         { model with Drafts = drafts }
-    | DeleteDraft title ->
-        let drafts =
-            model.Drafts
-            |> List.filter
-                (fun d ->
-                    match d with
-                    | RejectedDraft t -> t = title |> not
-                    | _ -> true)
-        { model with Drafts = drafts }
     (* _3_b_ Handle the UnbumpDraft message here - use the unbump method *)
 
 // VIEW (rendered with React)
@@ -110,7 +100,7 @@ let newDraftTile dispatch (title : string) =
               Card.footer []
                 [ Card.Footer.a [ GenericOption.Props [ OnClick (fun _ -> BumpDraft title |> dispatch) ] ]
                     [ str "Bump" ]
-                  Card.Footer.a [ (* _1_ insert the handler here *)  ]
+                  Card.Footer.a [ (* _1_ insert the handler here *) ]
                     [ str "Reject" ] ] ] ]
 
 let rejectedDraftTile dispatch (title : string) =
@@ -121,8 +111,7 @@ let rejectedDraftTile dispatch (title : string) =
               Card.content []
                 [ Content.content [] [ str "Unfortunately this draft has been rejected 🙁" ] ]
               Card.footer []
-                [ Card.Footer.a [ GenericOption.Props [ OnClick (fun _ -> DeleteDraft title |> dispatch) ] ]
-                    [ str "Delete" ] ] ] ]
+                [ ] ] ]
 
 let bumpedDraftTile dispatch (title : string) (bumps : int) =
     (*
@@ -178,8 +167,10 @@ let view (model:Model) dispatch =
                                                Input.Value model.DraftForm
                                                Input.OnChange (fun ev -> UpdateDraftForm ev.Value |> dispatch)
                                                Input.Option.Props
-                                                 [ OnKeyUp (fun ev ->
-                                                        if ev.keyCode = 13. then dispatch CreateDraft) ] ] ]
+                                                 [ (* _4_ there is a OnKeyUp you can use here
+                                                      the event holds the id of the pressed key
+                                                      you can look up which id corresponds with 'enter'
+                                                    *) ] ] ]
                               Card.footer []
                                 [ Card.Footer.a [ GenericOption.Props [ OnClick (fun _ -> dispatch CreateDraft) ] ]
                                     [ str "Submit" ] ] ] ] ]
