@@ -4,6 +4,10 @@
 
 CardManager is a small training exercise created for the software engineering students of the University of Applied Sciences Technikum Vienna. It should showcase how to write a small Single Page Application using Fable, Elmish and the Fulma component library.
 
+## Instructions
+
+This exercise includes a business case as well as a couple of steps you can follow to implement more functionality. You can find the instruction document [here](https://github.com/WalternativE/CardManager/blob/master/Instructions.md).
+
 ## I'm lost. What should I do now?
 
 First - as usual - check the documentation. You'll find the docs for each used component on its respective site.
