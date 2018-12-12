@@ -149,8 +149,7 @@ let toCardRows dispatch (titles : Draft list) =
     |> List.rev
     |> List.map ((List.map (toCard dispatch)) >> toCardRow)
 
-let view (model:Model) dispatch =
-
+let view (model:Model) dispatch =   
     div []
       [ Navbar.navbar [ Navbar.Color IsBlack ]
             [ Navbar.Brand.div []
